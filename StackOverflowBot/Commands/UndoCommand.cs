@@ -28,7 +28,7 @@ namespace StackOverflowBot.Commands
             if (!this._history.ContainsKey(target) || !this._history[target].Any())
             {
                 await this._turnContext.SendActivityAsync($"There's nothing to undo. :/", cancellationToken: this._cancellationToken);
-                return;
+                return false;
             }
             await this._history[target].Pop().Undo();
             return false;

@@ -7,6 +7,7 @@ using Microsoft.Bot.Connector.Authentication;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using StackOverflowBot.Bots;
+using StackOverflowBot.Registrations;
 using StackOverflowBot.Subscriptions;
 
 namespace StackOverflowBot
@@ -28,6 +29,7 @@ namespace StackOverflowBot
             services.AddSingleton<IBotFrameworkHttpAdapter, BotFrameworkHttpAdapter>();
             services.AddTransient<IBot, Bot>();
             services.AddSingleton<IRepository<Subscription>, InMemoryRepository<Subscription>>();
+            services.AddSingleton<IRepository<Registration>, InMemoryRepository<Registration>>();
         }
 
         public void Configure(IApplicationBuilder app, IHostingEnvironment env)
@@ -37,10 +39,10 @@ namespace StackOverflowBot
             else
                 app.UseHsts();
 
-            app.UseDefaultFiles();
-            app.UseStaticFiles();
-
-            app.UseMvc();
+            app.UseMvc(route => {
+                route.MapRoute("default", "{controller}/{action}", new { controller = "default", action = "index" });
+                route.MapRoute("so", "so/{action}/{registrationKey}", new { controller = "stackoverflow", action = "index" });
+            });
         }
 
     }

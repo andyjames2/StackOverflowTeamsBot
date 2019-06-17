@@ -26,7 +26,7 @@ namespace StackOverflowBot.Bots
                 return;
             }
             var input = turnContext.Activity.Text;
-            input = new Regex(@"<at>.*<\/at>").Replace(input, "").Trim(' ', (char)160, '\n');
+            input = new Regex(@"<at>.*<\/at>").Replace(input, "").Trim(' ', (char)160, '\n', '\r');
             var commandBreakUp = input.Split(" ");
             var command = commandBreakUp.FirstOrDefault();
             if (string.IsNullOrWhiteSpace(command))

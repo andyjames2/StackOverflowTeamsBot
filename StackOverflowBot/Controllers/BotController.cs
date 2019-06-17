@@ -6,8 +6,6 @@ using Microsoft.Bot.Builder.Integration.AspNet.Core;
 namespace StackOverflowBot.Controllers
 {
 
-    [ApiController]
-    [Route("api/messages")]
     public class BotController : ControllerBase
     {
 
@@ -21,7 +19,7 @@ namespace StackOverflowBot.Controllers
         }
 
         [HttpPost]
-        public async Task PostAsync()
+        public async Task Index()
         {
             await _adapter.ProcessAsync(Request, Response, _bot);
         }

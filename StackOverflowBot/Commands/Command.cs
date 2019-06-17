@@ -4,7 +4,9 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Bot.Builder;
 using Microsoft.Bot.Schema.Teams;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using StackOverflowBot.Registrations;
 using StackOverflowBot.Subscriptions;
 
 namespace StackOverflowBot.Commands
@@ -21,15 +23,24 @@ namespace StackOverflowBot.Commands
             {
                 "subscribe", (serviceProvider, turnContext, cancellationToken) =>
                 {
-                    var subscriptionSchemeCollection = serviceProvider.GetService<IRepository<Subscription>>();
-                    return new SubscribeCommand(subscriptionSchemeCollection, turnContext, cancellationToken);
+                    var subscriptionRepo = serviceProvider.GetService<IRepository<Subscription>>();
+                    return new SubscribeCommand(subscriptionRepo, turnContext, cancellationToken);
                 }
             },
             {
                 "unsubscribe", (serviceProvider, turnContext, cancellationToken) =>
                 {
-                    var subscriptionSchemeCollection = serviceProvider.GetService<IRepository<Subscription>>();
-                    return new UnsubscribeCommand(subscriptionSchemeCollection, turnContext, cancellationToken);
+                    var subscriptionRepo = serviceProvider.GetService<IRepository<Subscription>>();
+                    return new UnsubscribeCommand(subscriptionRepo, turnContext, cancellationToken);
+                }
+            },
+            {
+                "register", (serviceProvider, turnContext, cancellationToken) =>
+                {
+                    var repository = serviceProvider.GetService<IRepository<Registration>>();
+                    var config = serviceProvider.GetService<IConfiguration>();
+                    var rootUrl = config.GetValue<string>("RootUrl");
+                    return new RegisterCommand(rootUrl, repository, turnContext, cancellationToken);
                 }
             },
             {
