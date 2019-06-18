@@ -4,11 +4,12 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Bot.Builder;
 using Microsoft.Bot.Schema.Teams;
+using StackOverflowBot.Repositories;
 using StackOverflowBot.Subscriptions;
 
 namespace StackOverflowBot.Commands
 {
-    public class SubscribeCommand : Command
+    public class SubscribeCommand : ICommand
     {
 
         private IRepository<Subscription> _repository;
@@ -25,7 +26,7 @@ namespace StackOverflowBot.Commands
             this._cancellationToken = cancellationToken;
         }
 
-        public override async Task<bool> Do(IEnumerable<string> tags)
+        public async Task<bool> Do(IEnumerable<string> tags)
         {
             var (target, targetType) = this.GetTarget();
             this._subscription = this._repository.Get().FirstOrDefault(sub => sub.Target == target);
@@ -70,7 +71,7 @@ namespace StackOverflowBot.Commands
             return subscription;
         }
 
-        public override async Task Undo()
+        public async Task Undo()
         {
             if (this._previousTags == null)
             {

@@ -9,7 +9,7 @@ using Microsoft.Bot.Schema.Teams;
 
 namespace StackOverflowBot.Subscriptions
 {
-    public class Subscription  : IEquatable<Subscription>
+    public class Subscription : IEquatable<Subscription>
     {
 
         public string ServiceUrl { get; set; }

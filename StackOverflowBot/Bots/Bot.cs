@@ -6,18 +6,19 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Bot.Builder;
 using Microsoft.Bot.Schema;
-using Command = StackOverflowBot.Commands.Command;
+using StackOverflowBot.Commands.CommandHandling;
+using ICommand = StackOverflowBot.Commands.ICommand;
 
 namespace StackOverflowBot.Bots
 {
     public class Bot : ActivityHandler
     {
 
-        private readonly IServiceProvider _serviceProvider;
+        private readonly ICommandBroker _commandBroker;
 
-        public Bot(IServiceProvider serviceProvider)
+        public Bot(ICommandBroker commandBroker)
         {
-            this._serviceProvider = serviceProvider;
+            this._commandBroker = commandBroker;
         }
 
         public override async Task OnTurnAsync(ITurnContext turnContext, CancellationToken cancellationToken = default)
@@ -34,7 +35,7 @@ namespace StackOverflowBot.Bots
                 await turnContext.SendActivityAsync(MessageFactory.Text($"Echo: {turnContext.Activity.Text}"), cancellationToken);
             }
             var args = commandBreakUp.Skip(1);
-            await Command.Execute(this._serviceProvider, turnContext, cancellationToken, command, args);
+            await this._commandBroker.Execute(turnContext, cancellationToken, command, args);
         }
 
     }

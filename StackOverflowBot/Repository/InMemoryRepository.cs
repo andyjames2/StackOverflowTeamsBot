@@ -2,7 +2,7 @@
 using System.Collections.ObjectModel;
 using System.Linq;
 
-namespace StackOverflowBot.Subscriptions
+namespace StackOverflowBot.Repositories
 {
     public class InMemoryRepository<T> : IRepository<T>
     {

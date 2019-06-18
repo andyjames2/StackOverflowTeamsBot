@@ -6,11 +6,11 @@ using System.Threading.Tasks;
 using Microsoft.Bot.Builder;
 using MlkPwgen;
 using StackOverflowBot.Registrations;
-using StackOverflowBot.Subscriptions;
+using StackOverflowBot.Repositories;
 
 namespace StackOverflowBot.Commands
 {
-    public class RegisterCommand : Command
+    public class RegisterCommand : ICommand
     {
         private readonly string _rootUrl;
         private readonly IRepository<Registration> _repository;
@@ -26,7 +26,7 @@ namespace StackOverflowBot.Commands
             this._cancellationToken = cancellationToken;
         }
 
-        public override async Task<bool> Do(IEnumerable<string> args)
+        public async Task<bool> Do(IEnumerable<string> args)
         {
             if (args.Count() != 1)
             {
@@ -59,7 +59,7 @@ namespace StackOverflowBot.Commands
             return false;
         }
 
-        public override async Task Undo()
+        public async Task Undo()
         {
         }
 

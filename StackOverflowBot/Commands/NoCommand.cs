@@ -5,7 +5,7 @@ using Microsoft.Bot.Builder;
 
 namespace StackOverflowBot.Commands
 {
-    public class NoCommand : Command
+    public class NoCommand : ICommand
     {
 
         private readonly ITurnContext _turnContext;
@@ -17,13 +17,13 @@ namespace StackOverflowBot.Commands
             this._cancellationToken = cancellationToken;
         }
 
-        public override async Task<bool> Do(IEnumerable<string> args)
+        public async Task<bool> Do(IEnumerable<string> args)
         {
             await this._turnContext.SendActivityAsync($"Sorry, I don't know what you mean by that, type 'help' to see what I can do.", cancellationToken: this._cancellationToken);
             return false;
         }
 
-        public override async Task Undo()
+        public async Task Undo()
         {
         }
 

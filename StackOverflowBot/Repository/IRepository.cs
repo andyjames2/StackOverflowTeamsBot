@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 
-namespace StackOverflowBot.Subscriptions
+namespace StackOverflowBot.Repositories
 {
     public interface IRepository<T>
     {
