@@ -17,7 +17,11 @@ namespace StackOverflowBot.Registrations
 
         public DateTime Expiry { get; set; }
 
-        public RegistrationConfirmationTarget ConfirmationTarget { get; set; }
+        public RegistrationState State { get; set; }
+
+        public RegistrationConfirmationTarget Target { get; set; }
+
+        public DateTime LastCheck { get; set; } = DateTime.UtcNow;
 
         public bool Equals(Registration other)
         {
@@ -39,6 +43,8 @@ namespace StackOverflowBot.Registrations
             this.AccessToken = response["access_token"];
             var expiresIn = long.Parse(response["expires"]);
             this.Expiry = DateTime.UtcNow.AddSeconds(expiresIn);
+
+            this.State = RegistrationState.Ready;
         }
 
     }

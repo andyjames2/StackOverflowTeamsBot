@@ -31,11 +31,13 @@ namespace StackOverflowBot.Commands.CommandHandling
                 case "register":
                     var repository = this._serviceProvider.GetService<IRepository<Registration>>();
                     var config = this._serviceProvider.GetService<IConfiguration>();
-                    var rootUrl = config.GetValue<string>("RootUrl");
+                    var rootUrl = config.GetValue<string>("RootUrlForLinks");
                     return new RegisterCommand(rootUrl, repository, turnContext, cancellationToken);
                 case "undo":
                     var commandHistory = this._serviceProvider.GetService<ICommandHistory>();
                     return new UndoCommand(commandHistory, turnContext, cancellationToken);
+                case "help":
+                    return new HelpCommand(turnContext, cancellationToken);
                 default:
                     return new NoCommand(turnContext, cancellationToken);
             }

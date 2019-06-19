@@ -6,6 +6,7 @@ using Microsoft.Bot.Connector;
 using Microsoft.Bot.Connector.Authentication;
 using Microsoft.Bot.Schema;
 using Microsoft.Bot.Schema.Teams;
+using StackOverflowBot.Querying.Model;
 
 namespace StackOverflowBot.Subscriptions
 {
@@ -33,22 +34,33 @@ namespace StackOverflowBot.Subscriptions
                 && this.ServiceUrl == other.ServiceUrl;
         }
 
-        public async Task Send(string appId, string appPassword)
+        public async Task Send(string appId, string appPassword, Question question)
+        {
+            var message = $"# [{question.Title}]({question.Link})\n\n\r\n";
+            if (question.AnswerCount > 0)
+            {
+                message += $"Answered | ";
+            }
+            message += $"Asked by [{question.Owner.DisplayName} ({question.Owner.Reputation})]({question.Owner.Link})";
+            await this.Send(appId, appPassword, message);
+        }
+
+        public async Task Send(string appId, string appPassword, string message)
         {
             var connector = new ConnectorClient(new Uri(this.ServiceUrl), new MicrosoftAppCredentials(appId, appPassword));
 
-            var message = Activity.CreateMessageActivity();
-            message.From = this.Bot;
-            message.Recipient = this.Subscriber;
-            message.Text = "There's been activity on the PebblePad Stack Overflow! [Go there now](https://stackoverflow.com/c/pebblepad/questions).";
-            message.TextFormat = TextFormatTypes.Markdown;
-            message.Locale = "en-GB";
-            message.ChannelId = this.PlatformId;
+            var messageActivity = Activity.CreateMessageActivity();
+            messageActivity.From = this.Bot;
+            messageActivity.Recipient = this.Subscriber;
+            messageActivity.Text = message;
+            messageActivity.TextFormat = TextFormatTypes.Markdown;
+            messageActivity.Locale = "en-GB";
+            messageActivity.ChannelId = this.PlatformId;
 
             if (this.TargetType == TargetType.Conversation)
             {
-                message.Conversation = new ConversationAccount(id: this.Target);
-                await connector.Conversations.SendToConversationAsync((Activity) message);
+                messageActivity.Conversation = new ConversationAccount(id: this.Target);
+                await connector.Conversations.SendToConversationAsync((Activity) messageActivity);
             }
             else if (this.TargetType == TargetType.TeamsChannel)
             {
@@ -59,7 +71,7 @@ namespace StackOverflowBot.Subscriptions
                     {
                         Channel = new ChannelInfo(this.Target),
                     },
-                    Activity = (Activity)message
+                    Activity = (Activity)messageActivity
                 };
                 await connector.Conversations.CreateConversationAsync(conversationParameters);
             }

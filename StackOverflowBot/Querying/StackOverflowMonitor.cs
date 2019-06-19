@@ -1,12 +1,15 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
-using System.Threading;
 using System.Threading.Tasks;
+using System.Timers;
 using Microsoft.Extensions.Configuration;
 using Newtonsoft.Json;
+using StackOverflowBot.Querying.Model;
 using StackOverflowBot.Registrations;
 using StackOverflowBot.Repositories;
+using StackOverflowBot.Subscriptions;
 
 namespace StackOverflowBot.Querying
 {
@@ -14,43 +17,70 @@ namespace StackOverflowBot.Querying
     {
 
         private Timer _timer;
-        private readonly IConfiguration _configuration;
         private readonly string _key;
-        private readonly IRepository<Registration> _repository;
+        private readonly IConfiguration _configuration;
+        private readonly IRepository<Registration> _registrationRepository;
+        private readonly IRepository<Subscription> _subscriptionRepository;
         private readonly HttpClient _httpClient;
 
-        public StackOverflowMonitor(IConfiguration configuration, IRepository<Registration> repository, HttpClient httpClient)
+        public StackOverflowMonitor(IConfiguration configuration, IRepository<Registration> registrationRepository, IRepository<Subscription> subscriptionRepository, HttpClient httpClient)
         {
-            this._timer = new Timer(async s => await this.Query());
+            var interval = configuration.GetValue<long>("QueryIntervalInMs", 0);
+            if (interval == 0) interval = 10000;
+            this._timer = new Timer(interval) { AutoReset = true };
+            this._timer.Elapsed += async (s, e) => await this.Query();
+            this._key = configuration.GetValue<string>("StackOverflowKey");
             this._configuration = configuration;
-            this._key = this._configuration.GetValue<string>("StackOverflowKey");
-            this._repository = repository;
+            this._registrationRepository = registrationRepository;
+            this._subscriptionRepository = subscriptionRepository;
             this._httpClient = httpClient;
         }
 
         public void Start()
         {
-            var interval = this._configuration.GetValue<long>("QueryIntervalInMs");
-            this._timer.Change(TimeSpan.Zero, TimeSpan.FromMilliseconds(interval));
+            this._timer.Start();
         }
 
         public async Task Query()
         {
-            foreach (var registration in this._repository.Get().Where(r => r.AccessToken != null))
-            // todo: Add a registration state
+            var appId = this._configuration.GetValue<string>("MicrosoftAppId");
+            var appPassword = this._configuration.GetValue<string>("MicrosoftAppPassword");
+
+            foreach (var registration in this._registrationRepository.Get().Where(r => r.State == RegistrationState.Ready))
             {
                 var teamId = Uri.EscapeDataString(registration.TeamId);
-                this._httpClient.DefaultRequestHeaders.Add("X-API-Access-Token", registration.AccessToken);
+                var sinceDate = (int)registration.LastCheck.Subtract(new DateTime(1970, 1, 1)).TotalSeconds;
 
-                var requestMessage = new HttpRequestMessage(HttpMethod.Get, $"https://api.stackexchange.com/2.2/questions?order=desc&sort=creation&site=stackoverflow&key={this._key}&team=stackoverflow.com/c/{teamId}");
-                requestMessage.Headers.Add("X-API-Access-Token", registration.AccessToken);
-                var response = await this._httpClient.SendAsync(requestMessage);
-                var questionsJson = await response.Content.ReadAsStringAsync();
-                var allQuestions = JsonConvert.DeserializeObject<dynamic>(questionsJson);
+                var questions = await GetRecentQuestions(registration, teamId, sinceDate);
+                
+                if (questions.Any())
+                {
+                    var subscriptions = this._subscriptionRepository.Get().Where(s => s.ServiceUrl == registration.Target.ServiceUrl);
+                    foreach (var question in questions)
+                    {
+                        foreach (var subscription in subscriptions)
+                        {
+                            if (!subscription.Tags.Any() || question.Tags.Any(t => subscription.Tags.Contains(t)))
+                            {
+                                await subscription.Send(appId, appPassword, question);
+                            }
+                        }
+                    }
+                }
 
+                registration.LastCheck = DateTime.UtcNow;
+                this._registrationRepository.SaveOrUpdate(registration);
             }
             // todo: need to add token refreshing
         }
 
+        private async Task<IEnumerable<Question>> GetRecentQuestions(Registration registration, string teamId, int sinceDate)
+        {
+            var requestMessage = new HttpRequestMessage(HttpMethod.Get, $"https://api.stackexchange.com/2.2/questions?order=desc&sort=creation&fromdate={sinceDate}&site=stackoverflow&key={this._key}&team=stackoverflow.com/c/{teamId}");
+            requestMessage.Headers.Add("X-API-Access-Token", registration.AccessToken);
+            var response = await this._httpClient.SendAsync(requestMessage);
+            var questionsJson = await response.Content.ReadAsStringAsync();
+            return JsonConvert.DeserializeObject<StackOverflowResponse<Question>>(questionsJson).Items;
+        }
     }
 }

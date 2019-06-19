@@ -1,5 +1,7 @@
-﻿using Microsoft.AspNetCore;
+﻿using System.IO;
+using Microsoft.AspNetCore;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.Extensions.Configuration;
 
 namespace StackOverflowBot
 {
@@ -12,9 +14,16 @@ namespace StackOverflowBot
 
         }
 
-        public static IWebHostBuilder CreateWebHostBuilder(string[] args) =>
-            WebHost.CreateDefaultBuilder(args)
+        public static IWebHostBuilder CreateWebHostBuilder(string[] args)
+        {
+            var config = new ConfigurationBuilder()
+               .SetBasePath(Directory.GetCurrentDirectory())
+               .AddJsonFile("appsettings.json", optional: true)
+               .Build();
+            return WebHost.CreateDefaultBuilder(args).UseConfiguration(config)
                 .UseStartup<Startup>();
+
+        }
 
     }
 }

@@ -16,6 +16,7 @@ namespace StackOverflowBot.Commands
         private readonly IRepository<Registration> _repository;
         private readonly ITurnContext _turnContext;
         private readonly CancellationToken _cancellationToken;
+        private string _registrationKey;
 
         public RegisterCommand(string rootUrl, IRepository<Registration> repository, ITurnContext turnContext, CancellationToken cancellationToken)
         {
@@ -40,27 +41,47 @@ namespace StackOverflowBot.Commands
                 await this._turnContext.SendActivityAsync($"Hmmm, I can't seem to work with that URL. Take the URL from the address bar in your browser while on your team's Stack Overflow, for example `register https://stackoverflow.com/c/contoso/`.", cancellationToken: this._cancellationToken);
                 return false;
             }
-            var teamId = teamIdMatch.Value;
-            var regsitrationKey = PasswordGenerator.Generate(length: 10, allowed: Sets.Alphanumerics);
+            var teamId = teamIdMatch.Value.ToLower();
+            var registrationKey = PasswordGenerator.Generate(length: 10, allowed: Sets.Alphanumerics);
+
+            var existingRegistration = this._repository.Get().FirstOrDefault(r => r.Target.ServiceUrl == this._turnContext.Activity.ServiceUrl && r.TeamId == teamId);
+            if (existingRegistration != null)
+            {
+                if (existingRegistration.State == RegistrationState.SettingUp)
+                {
+                    registrationKey = existingRegistration.RegistrationKey;
+                }
+                else
+                {
+                    await this._turnContext.SendActivityAsync($"You already have a registration with that team's Stack Overflow. If you want to change it unregister it first, for example `unregister https://stackoverflow.com/c/contoso/`.", cancellationToken: this._cancellationToken);
+                    return false;
+                }
+            }
+
 
             this._repository.SaveOrUpdate(new Registration() {
-                RegistrationKey = regsitrationKey,
+                RegistrationKey = registrationKey,
                 TeamId = teamId,
-                ConfirmationTarget = new RegistrationConfirmationTarget
+                Target = new RegistrationConfirmationTarget
                 {
                     Bot = this._turnContext.Activity.Recipient,
                     PlatformId = this._turnContext.Activity.ChannelId,
                     ServiceUrl = this._turnContext.Activity.ServiceUrl,
-                    Target = this._turnContext.Activity.Conversation.Id
+                    Id = this._turnContext.Activity.Conversation.Id
                 }
             });
 
-            await this._turnContext.SendActivityAsync($"Great, let's get started! Click the following link to authorize my access to your team's Stack Overflow: [{_rootUrl}so/register/{regsitrationKey}]({_rootUrl}so/register/{regsitrationKey}).", cancellationToken: this._cancellationToken);
-            return false;
+            this._registrationKey = registrationKey;
+
+            await this._turnContext.SendActivityAsync($"Great, let's get started! Click the following link to authorize my access to your team's Stack Overflow: [{_rootUrl}so/register/{registrationKey}]({_rootUrl}so/register/{registrationKey}).", cancellationToken: this._cancellationToken);
+
+            return true;
         }
 
         public async Task Undo()
         {
+            var existingRegistration = this._repository.Get().FirstOrDefault(r => r.RegistrationKey == this._registrationKey);
+            this._repository.Delete(existingRegistration);
         }
 
     }

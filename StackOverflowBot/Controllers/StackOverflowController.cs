@@ -28,20 +28,10 @@ namespace StackOverflowBot.Controllers
         }
 
         [HttpGet]
-        public async Task Ping()
-        {
-            var appId = this._configuration.GetValue<string>("MicrosoftAppId");
-            var appPassword = this._configuration.GetValue<string>("MicrosoftAppPassword");
-
-            foreach (var sub in this._subscriptionRepository.Get())
-                await sub.Send(appId, appPassword);
-        }
-
-        [HttpGet]
         public async Task<IActionResult> Register([FromRoute] string registrationKey)
         {
             var registration = this._registrationRepository.Get().FirstOrDefault(r => r.RegistrationKey == registrationKey);
-            if (registration == null)
+            if (registration == null || registration.State != RegistrationState.SettingUp)
                 return this.Unauthorized();
             var clientId = this._configuration.GetValue<string>("StackOverflowClientId");
             var rootUrl = this._configuration.GetValue<string>("RootUrl");
@@ -56,7 +46,7 @@ namespace StackOverflowBot.Controllers
         public async Task<IActionResult> Authorize([FromRoute] string registrationKey, [FromQuery] string code)
         {
             var registration = this._registrationRepository.Get().FirstOrDefault(r => r.RegistrationKey == registrationKey);
-            if (registration == null)
+            if (registration == null || registration.State != RegistrationState.SettingUp)
                 return this.Unauthorized();
 
             var clientId = this._configuration.GetValue<string>("StackOverflowClientId");
@@ -71,7 +61,7 @@ namespace StackOverflowBot.Controllers
             var appId = this._configuration.GetValue<string>("MicrosoftAppId");
             var appPassword = this._configuration.GetValue<string>("MicrosoftAppPassword");
 
-            await registration.ConfirmationTarget.SendConfirmation(appId, appPassword);
+            await registration.Target.SendConfirmation(appId, appPassword);
 
             return this.View();
         }

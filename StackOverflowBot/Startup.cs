@@ -38,8 +38,8 @@ namespace StackOverflowBot
             services.AddSingleton<ICommandBroker, CommandBroker>();
             services.AddSingleton<ICommandFactory, CommandFactory>();
             services.AddSingleton<ICommandHistory, CommandHistory>();
-            services.AddSingleton<IRepository<Subscription>, InMemoryRepository<Subscription>>();
-            services.AddSingleton<IRepository<Registration>, InMemoryRepository<Registration>>();
+            services.AddSingleton<IRepository<Subscription>, PersistedInMemoryRepository<Subscription>>();
+            services.AddSingleton<IRepository<Registration>, PersistedInMemoryRepository<Registration>>();
         }
 
         public void Configure(IApplicationBuilder app, IHostingEnvironment env, IStackOverflowMonitor stackOverflowMonitor)
