@@ -10,7 +10,7 @@ namespace StackOverflowBot.Links
     public class Link : IEquatable<Link>
     {
 
-        public string RegistrationKey { get; set; }
+        public string LinkKey { get; set; }
 
         public string TeamId { get; set; }
 
@@ -18,7 +18,7 @@ namespace StackOverflowBot.Links
 
         public DateTime Expiry { get; set; }
 
-        public RegistrationState State { get; set; }
+        public LinkState State { get; set; }
 
         public LinkTarget Target { get; set; }
 
@@ -26,7 +26,7 @@ namespace StackOverflowBot.Links
 
         public bool Equals(Link other)
         {
-            return this.RegistrationKey == other.RegistrationKey;
+            return this.LinkKey == other.LinkKey;
         }
 
         public async Task GetAccessToken(HttpClient client, string clientId, string clientSecret, string code, string redirectUrl)
@@ -45,7 +45,7 @@ namespace StackOverflowBot.Links
             var expiresIn = long.Parse(response["expires"]);
             this.Expiry = DateTime.UtcNow.AddSeconds(expiresIn);
 
-            this.State = RegistrationState.Ready;
+            this.State = LinkState.Ready;
         }
 
         public Task<IEnumerable<Question>> GetRecentQuestionsAsync(HttpClient client, string key, int sinceDate)

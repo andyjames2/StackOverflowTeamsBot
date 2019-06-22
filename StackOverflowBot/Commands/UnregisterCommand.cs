@@ -15,7 +15,7 @@ namespace StackOverflowBot.Commands
         private readonly IRepository<Link> _repository;
         private readonly ITurnContext _turnContext;
         private readonly CancellationToken _cancellationToken;
-        private Link _existingRegistration;
+        private Link _existingLink;
 
         public UnlinkCommand(IRepository<Link> repository, ITurnContext turnContext, CancellationToken cancellationToken)
         {
@@ -40,14 +40,14 @@ namespace StackOverflowBot.Commands
             }
             var teamId = teamIdMatch.Value.ToLower();
 
-            this._existingRegistration = this._repository.Get().FirstOrDefault(r => r.TeamId == teamId);
-            if (this._existingRegistration == null)
+            this._existingLink = this._repository.Get().FirstOrDefault(r => r.TeamId == teamId);
+            if (this._existingLink == null)
             {
                 await this._turnContext.SendActivityAsync($"Sorry, you don't seem to have a link to the team `{teamId}`. :/", cancellationToken: this._cancellationToken);
                 return false;
             }
 
-            this._repository.Delete(this._existingRegistration);
+            this._repository.Delete(this._existingLink);
             await this._turnContext.SendActivityAsync($"I've unlinked the Stack Overflow team `{teamId}` for you. :(", cancellationToken: this._cancellationToken);
 
             return true;
@@ -55,8 +55,8 @@ namespace StackOverflowBot.Commands
 
         public async Task Undo()
         {
-            await this._turnContext.SendActivityAsync($"I've relinked the Stack Overflow team `{this._existingRegistration.TeamId}`! :)", cancellationToken: this._cancellationToken);
-            this._repository.SaveOrUpdate(this._existingRegistration);
+            await this._turnContext.SendActivityAsync($"I've relinked the Stack Overflow team `{this._existingLink.TeamId}`! :)", cancellationToken: this._cancellationToken);
+            this._repository.SaveOrUpdate(this._existingLink);
         }
 
     }

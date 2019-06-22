@@ -1,6 +1,6 @@
 ﻿namespace StackOverflowBot.Links
 {
-    public enum RegistrationState
+    public enum LinkState
     {
 
         SettingUp,

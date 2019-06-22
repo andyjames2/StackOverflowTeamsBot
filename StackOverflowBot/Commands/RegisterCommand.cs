@@ -16,7 +16,7 @@ namespace StackOverflowBot.Commands
         private readonly IRepository<Link> _repository;
         private readonly ITurnContext _turnContext;
         private readonly CancellationToken _cancellationToken;
-        private string _registrationKey;
+        private string _linkKey;
 
         public LinkCommand(string rootUrl, IRepository<Link> repository, ITurnContext turnContext, CancellationToken cancellationToken)
         {
@@ -42,14 +42,14 @@ namespace StackOverflowBot.Commands
                 return false;
             }
             var teamId = teamIdMatch.Value.ToLower();
-            var registrationKey = PasswordGenerator.Generate(length: 10, allowed: Sets.Alphanumerics);
+            var linkKey = PasswordGenerator.Generate(length: 10, allowed: Sets.Alphanumerics);
 
-            var existingRegistration = this._repository.Get().FirstOrDefault(r => r.Target.ServiceUrl == this._turnContext.Activity.ServiceUrl && r.TeamId == teamId);
-            if (existingRegistration != null)
+            var existingLink = this._repository.Get().FirstOrDefault(r => r.Target.ServiceUrl == this._turnContext.Activity.ServiceUrl && r.TeamId == teamId);
+            if (existingLink != null)
             {
-                if (existingRegistration.State == RegistrationState.SettingUp)
+                if (existingLink.State == LinkState.SettingUp)
                 {
-                    registrationKey = existingRegistration.RegistrationKey;
+                    linkKey = existingLink.LinkKey;
                 }
                 else
                 {
@@ -60,7 +60,7 @@ namespace StackOverflowBot.Commands
 
 
             this._repository.SaveOrUpdate(new Link() {
-                RegistrationKey = registrationKey,
+                LinkKey = linkKey,
                 TeamId = teamId,
                 Target = new LinkTarget
                 {
@@ -71,17 +71,17 @@ namespace StackOverflowBot.Commands
                 }
             });
 
-            this._registrationKey = registrationKey;
+            this._linkKey = linkKey;
 
-            await this._turnContext.SendActivityAsync($"Great, let's get started! Click the following link to authorize my access to your team's Stack Overflow: [{_rootUrl}so/link/{registrationKey}]({_rootUrl}so/link/{registrationKey}).", cancellationToken: this._cancellationToken);
+            await this._turnContext.SendActivityAsync($"Great, let's get started! Click the following link to authorize my access to your team's Stack Overflow: [{_rootUrl}so/link/{linkKey}]({_rootUrl}so/link/{linkKey}).", cancellationToken: this._cancellationToken);
 
             return true;
         }
 
         public async Task Undo()
         {
-            var existingRegistration = this._repository.Get().FirstOrDefault(r => r.RegistrationKey == this._registrationKey);
-            this._repository.Delete(existingRegistration);
+            var existingLink = this._repository.Get().FirstOrDefault(r => r.LinkKey == this._linkKey);
+            this._repository.Delete(existingLink);
         }
 
     }

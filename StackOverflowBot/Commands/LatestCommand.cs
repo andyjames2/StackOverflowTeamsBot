@@ -44,10 +44,10 @@ namespace StackOverflowBot.Commands
             }
 
             var questions = new List<IEnumerable<Question>>();
-            var registrations = this._repository.Get().Where(t => t.Target.ServiceUrl == this._turnContext.Activity.ServiceUrl);
-            foreach (var registration in registrations)
+            var links = this._repository.Get().Where(t => t.Target.ServiceUrl == this._turnContext.Activity.ServiceUrl);
+            foreach (var link in links)
             {
-                var result = await registration.GetLatestQuestionsAsync(this._httpClient, this._apiKey, number);
+                var result = await link.GetLatestQuestionsAsync(this._httpClient, this._apiKey, number);
                 questions.Add(result);
             }
 

@@ -43,21 +43,21 @@ namespace StackOverflowBot.Querying
             var appId = this._configuration.GetValue<string>("MicrosoftAppId");
             var appPassword = this._configuration.GetValue<string>("MicrosoftAppPassword");
 
-            foreach (var registration in this._linkRepository.Get().Where(r => r.State == RegistrationState.Ready))
+            foreach (var link in this._linkRepository.Get().Where(r => r.State == LinkState.Ready))
             {
-                var sinceDate = (int)registration.LastCheck.Subtract(new DateTime(1970, 1, 1)).TotalSeconds;
-                var questions = await registration.GetRecentQuestionsAsync(this._httpClient, this._key, sinceDate);
+                var sinceDate = (int)link.LastCheck.Subtract(new DateTime(1970, 1, 1)).TotalSeconds;
+                var questions = await link.GetRecentQuestionsAsync(this._httpClient, this._key, sinceDate);
                 
                 if (questions.Any())
                 {
-                    var subscriptions = this._subscriptionRepository.Get().Where(s => s.ServiceUrl == registration.Target.ServiceUrl);
+                    var subscriptions = this._subscriptionRepository.Get().Where(s => s.ServiceUrl == link.Target.ServiceUrl);
                     foreach (var question in questions)
                     foreach (var subscription in subscriptions)
                         await subscription.ReceiveQuestion(appId, appPassword, question);
                 }
 
-                registration.LastCheck = DateTime.UtcNow;
-                this._linkRepository.SaveOrUpdate(registration);
+                link.LastCheck = DateTime.UtcNow;
+                this._linkRepository.SaveOrUpdate(link);
             }
             // todo: need to add token refreshing
             this._timer.Start();

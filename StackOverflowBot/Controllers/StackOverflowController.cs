@@ -15,53 +15,53 @@ namespace StackOverflowBot.Controllers
     {
 
         private readonly IRepository<Subscription> _subscriptionRepository;
-        private readonly IRepository<Link> _registrationRepository;
+        private readonly IRepository<Link> _linkRepository;
         private readonly IConfiguration _configuration;
         private readonly HttpClient _httpClient;
 
-        public StackOverflowController(IRepository<Subscription> subscriptionRepository, IRepository<Link> registrationRepository, IConfiguration configuration, HttpClient httpClient)
+        public StackOverflowController(IRepository<Subscription> subscriptionRepository, IRepository<Link> linkRepository, IConfiguration configuration, HttpClient httpClient)
         {
             this._subscriptionRepository = subscriptionRepository;
-            this._registrationRepository = registrationRepository;
+            this._linkRepository = linkRepository;
             this._configuration = configuration;
             this._httpClient = httpClient;
         }
 
         [HttpGet]
-        public async Task<IActionResult> Link([FromRoute] string registrationKey)
+        public async Task<IActionResult> Link([FromRoute] string linkKey)
         {
-            var registration = this._registrationRepository.Get().FirstOrDefault(r => r.RegistrationKey == registrationKey);
-            if (registration == null || registration.State != RegistrationState.SettingUp)
+            var link = this._linkRepository.Get().FirstOrDefault(r => r.LinkKey == linkKey);
+            if (link == null || link.State != LinkState.SettingUp)
                 return this.Unauthorized();
             var clientId = this._configuration.GetValue<string>("StackOverflowClientId");
             var rootUrl = this._configuration.GetValue<string>("RootUrlForLinks");
             if (!rootUrl.EndsWith("/")) rootUrl += "/";
             rootUrl = Uri.EscapeDataString(rootUrl);
-            var teamId = Uri.EscapeDataString(registration.TeamId);
-            var url = $"https://stackoverflow.com/oauth?client_id={clientId}&scope=access_team|stackoverflow.com/c/{teamId}&redirect_uri={rootUrl}so/authorize/{registrationKey}";
+            var teamId = Uri.EscapeDataString(link.TeamId);
+            var url = $"https://stackoverflow.com/oauth?client_id={clientId}&scope=access_team|stackoverflow.com/c/{teamId}&redirect_uri={rootUrl}so/authorize/{linkKey}";
             return View(model: url);
         }
 
         [HttpGet]
-        public async Task<IActionResult> Authorize([FromRoute] string registrationKey, [FromQuery] string code)
+        public async Task<IActionResult> Authorize([FromRoute] string linkKey, [FromQuery] string code)
         {
-            var registration = this._registrationRepository.Get().FirstOrDefault(r => r.RegistrationKey == registrationKey);
-            if (registration == null || registration.State != RegistrationState.SettingUp)
+            var link = this._linkRepository.Get().FirstOrDefault(r => r.LinkKey == linkKey);
+            if (link == null || link.State != LinkState.SettingUp)
                 return this.Unauthorized();
 
             var clientId = this._configuration.GetValue<string>("StackOverflowClientId");
             var clientSecret = this._configuration.GetValue<string>("StackOverflowClientSecret");
             var rootUrl = this._configuration.GetValue<string>("RootUrlForLinks");
             if (!rootUrl.EndsWith("/")) rootUrl += "/";
-            var redirectUrl = rootUrl += "so/authorize/" + registrationKey;
+            var redirectUrl = rootUrl += "so/authorize/" + linkKey;
 
-            await registration.GetAccessToken(this._httpClient, clientId, clientSecret, code, redirectUrl);
-            this._registrationRepository.SaveOrUpdate(registration);
+            await link.GetAccessToken(this._httpClient, clientId, clientSecret, code, redirectUrl);
+            this._linkRepository.SaveOrUpdate(link);
 
             var appId = this._configuration.GetValue<string>("MicrosoftAppId");
             var appPassword = this._configuration.GetValue<string>("MicrosoftAppPassword");
 
-            await registration.Target.SendConfirmation(appId, appPassword);
+            await link.Target.SendConfirmation(appId, appPassword);
 
             return this.View();
         }

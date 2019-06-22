@@ -51,7 +51,7 @@ namespace StackOverflowBot
 
             app.UseMvc(route => {
                 route.MapRoute("default", "{controller}/{action}", new { controller = "default", action = "index" });
-                route.MapRoute("so", "so/{action}/{registrationKey}", new { controller = "stackoverflow", action = "index" });
+                route.MapRoute("so", "so/{action}/{linkKey}", new { controller = "stackoverflow", action = "index" });
             });
 
             stackOverflowMonitor.Start();
