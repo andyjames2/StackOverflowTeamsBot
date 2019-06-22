@@ -11,7 +11,7 @@ using Microsoft.Extensions.DependencyInjection;
 using StackOverflowBot.Bots;
 using StackOverflowBot.Commands.CommandHandling;
 using StackOverflowBot.Querying;
-using StackOverflowBot.Registrations;
+using StackOverflowBot.Links;
 using StackOverflowBot.Repositories;
 using StackOverflowBot.Subscriptions;
 
@@ -39,7 +39,7 @@ namespace StackOverflowBot
             services.AddSingleton<ICommandFactory, CommandFactory>();
             services.AddSingleton<ICommandHistory, CommandHistory>();
             services.AddSingleton<IRepository<Subscription>, PersistedInMemoryRepository<Subscription>>();
-            services.AddSingleton<IRepository<Registration>, PersistedInMemoryRepository<Registration>>();
+            services.AddSingleton<IRepository<Link>, PersistedInMemoryRepository<Link>>();
         }
 
         public void Configure(IApplicationBuilder app, IHostingEnvironment env, IStackOverflowMonitor stackOverflowMonitor)

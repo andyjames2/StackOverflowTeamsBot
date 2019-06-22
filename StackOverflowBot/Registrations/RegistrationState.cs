@@ -1,4 +1,4 @@
-﻿namespace StackOverflowBot.Registrations
+﻿namespace StackOverflowBot.Links
 {
     public enum RegistrationState
     {

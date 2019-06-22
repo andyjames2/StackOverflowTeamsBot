@@ -19,7 +19,7 @@ namespace StackOverflowBot.Commands
 
         public async Task<bool> Do(IEnumerable<string> args)
         {
-            await this._turnContext.SendActivityAsync($"Sorry, I don't know what you mean by that, type 'help' to see what I can do.", cancellationToken: this._cancellationToken);
+            await this._turnContext.SendActivityAsync($"Sorry, I don't know what you mean by that, type `help` to see what I can do.", cancellationToken: this._cancellationToken);
             return false;
         }
 

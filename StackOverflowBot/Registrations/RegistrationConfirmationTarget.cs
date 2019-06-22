@@ -4,9 +4,9 @@ using Microsoft.Bot.Connector;
 using Microsoft.Bot.Connector.Authentication;
 using Microsoft.Bot.Schema;
 
-namespace StackOverflowBot.Registrations
+namespace StackOverflowBot.Links
 {
-    public class RegistrationConfirmationTarget
+    public class LinkTarget
     {
 
         public string ServiceUrl { get; set; }
@@ -21,7 +21,7 @@ namespace StackOverflowBot.Registrations
             message.ChannelId = this.PlatformId;
             message.Conversation = new ConversationAccount(id: this.Id);
             message.From = this.Bot;
-            message.Text = "Excellent! Your Stack Overflow team has been registered, get subscribing!";
+            message.Text = "Excellent! Your Stack Overflow team has been linked, get subscribing!";
             message.Locale = "en-GB";
             await connector.Conversations.SendToConversationAsync((Activity) message);
         }
