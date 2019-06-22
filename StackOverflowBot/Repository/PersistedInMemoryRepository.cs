@@ -18,7 +18,10 @@ namespace StackOverflowBot.Repositories
 
         public PersistedInMemoryRepository(IConfiguration configuration)
         {
-            var path = configuration.GetValue<string>("PersistenceLocation", Path.Combine(Environment.CurrentDirectory, "persisted"));
+            var path = configuration.GetValue<string>("PersistenceLocation", null);
+            if (string.IsNullOrEmpty(path)) {
+                path = Path.Combine(Environment.CurrentDirectory, "persisted");
+            }
             Directory.CreateDirectory(path);
             this._filePath = Path.Combine(path, typeof(T).Name + ".json");
             if (File.Exists(this._filePath))
