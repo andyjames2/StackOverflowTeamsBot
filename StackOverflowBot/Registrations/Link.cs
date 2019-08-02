@@ -5,8 +5,7 @@ using System.Threading.Tasks;
 using Newtonsoft.Json;
 using StackOverflowBot.Querying.Model;
 
-namespace StackOverflowBot.Links
-{
+namespace StackOverflowBot.Links {
     public class Link : IEquatable<Link>
     {
 
@@ -15,8 +14,6 @@ namespace StackOverflowBot.Links
         public string TeamId { get; set; }
 
         public string AccessToken { get; set; }
-
-        public DateTime Expiry { get; set; }
 
         public LinkState State { get; set; }
 
@@ -42,9 +39,6 @@ namespace StackOverflowBot.Links
             var response = await responseMessage.Content.ReadAsAsync<Dictionary<string, string>>();
 
             this.AccessToken = response["access_token"];
-            var expiresIn = long.Parse(response["expires"]);
-            this.Expiry = DateTime.UtcNow.AddSeconds(expiresIn);
-
             this.State = LinkState.Ready;
         }
 

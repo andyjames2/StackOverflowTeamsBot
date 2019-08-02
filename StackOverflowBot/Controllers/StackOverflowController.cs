@@ -38,7 +38,7 @@ namespace StackOverflowBot.Controllers
             if (!rootUrl.EndsWith("/")) rootUrl += "/";
             rootUrl = Uri.EscapeDataString(rootUrl);
             var teamId = Uri.EscapeDataString(link.TeamId);
-            var url = $"https://stackoverflow.com/oauth?client_id={clientId}&scope=access_team|stackoverflow.com/c/{teamId}&redirect_uri={rootUrl}so/authorize/{linkKey}";
+            var url = $"https://stackoverflow.com/oauth?client_id={clientId}&scope=no_expiry,access_team|stackoverflow.com/c/{teamId}&redirect_uri={rootUrl}so/authorize/{linkKey}";
             return View(model: url);
         }
 

@@ -1,16 +1,19 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
 using System.Threading.Tasks;
 using System.Timers;
 using Microsoft.Extensions.Configuration;
+using Newtonsoft.Json;
 using StackOverflowBot.Links;
+using StackOverflowBot.Querying.Model;
 using StackOverflowBot.Repositories;
 using StackOverflowBot.Subscriptions;
 
 namespace StackOverflowBot.Querying
 {
-    public class StackOverflowMonitor : IStackOverflowMonitor
+    public class StackOverflowMonitor : IStackOverflowMonitor, IDisposable
     {
 
         private Timer _timer;
@@ -45,7 +48,7 @@ namespace StackOverflowBot.Querying
 
             foreach (var link in this._linkRepository.Get().Where(r => r.State == LinkState.Ready))
             {
-                var sinceDate = (int)link.LastCheck.Subtract(new DateTime(1970, 1, 1)).TotalSeconds;
+                var sinceDate = (int) link.LastCheck.Subtract(new DateTime(1970, 1, 1)).TotalSeconds;
                 var questions = await link.GetRecentQuestionsAsync(this._httpClient, this._key, sinceDate);
                 
                 if (questions.Any())
@@ -58,10 +61,28 @@ namespace StackOverflowBot.Querying
 
                 link.LastCheck = DateTime.UtcNow;
                 this._linkRepository.SaveOrUpdate(link);
+
             }
-            // todo: need to add token refreshing
             this._timer.Start();
         }
+
+        #region IDisposable Support
+        private bool disposedValue = false;
+
+        protected virtual void Dispose(bool disposing) {
+            if (!disposedValue) {
+                if (disposing) {
+                    this._timer.Stop();
+                    this._timer.Dispose();
+                }
+                disposedValue = true;
+            }
+        }
+
+        public void Dispose() {
+            Dispose(true);
+        }
+        #endregion
 
     }
 }
