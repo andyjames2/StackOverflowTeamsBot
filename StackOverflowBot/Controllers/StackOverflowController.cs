@@ -53,6 +53,7 @@ namespace StackOverflowBot.Controllers
             var clientSecret = this._configuration.GetValue<string>("StackOverflowClientSecret");
             var rootUrl = this._configuration.GetValue<string>("RootUrlForLinks");
             if (!rootUrl.EndsWith("/")) rootUrl += "/";
+            rootUrl = Uri.EscapeDataString(rootUrl);
             var redirectUrl = rootUrl += "so/authorize/" + linkKey;
 
             await link.GetAccessToken(this._httpClient, clientId, clientSecret, code, redirectUrl);
